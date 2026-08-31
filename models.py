@@ -1,6 +1,46 @@
 from abc import ABC, abstractmethod
+from exceptions import InsufficientStockError
+
+#_____SLEVY_________
+
+class DiscountStrategy(ABC):
+    """Abstraktní předek pro všechny typy slev"""
+
+    @abstractmethod
+    def calculate(self, total_price: float) -> float:
+        pass
+
+class NoDiscount(DiscountStrategy):
+    """Žádná sleva"""
+
+    def calculate(self, total_price: float) -> float:
+        return total_price
+
+class PercentageDiscount(DiscountStrategy):
+    """Procentuáln sleva"""
+
+    def __init__(self, percentage: float):
+        self.percentage = percentage
+
+    def calculate(self, total_price: float) -> float:
+        discount_ammount = total_price * (self.percentage/100)
+        return max(0.0, total_price - discount_ammount)
+
+class FixedDiscount(DiscountStrategy):
+    """Fixkní částka slevová"""
+    def __init__(self, ammount: float):
+        self.ammount = ammount
+
+    def calculate(self, total_price: float) -> float:
+        return max(0.0, total_price - self.ammount) 
+
+
+
+
+#______PRODUKTY_______    
 
 class Product(ABC):
+    """Předek pro produkty"""
     def __init__(self, name:str, base_price:float):
         self.name = name
         self._base_price = base_price
@@ -33,7 +73,7 @@ class PhysicalProduct(Product):
 
     def reduce_stock(self, quantity: int):
         if quantity > self._stock_quantity:
-            raise ValueError("Not enough stock available.")
+            raise InsufficientStockError("Not enough stock available.")
         self._stock_quantity -= quantity
 
 
@@ -48,15 +88,26 @@ class ServiceItem(Product):
         return self.base_price * self.duration_hours * (1 + self.vat_rate)
 
 
+
+#________ZÁZKAZNÍCI___________
+
+
 class Customer:
-    def __init__(self, customer_id: str, name: str, discount_percentage: float = 0.0):
+    def __init__(self, customer_id: str, name: str, discount_strategy: DiscountStrategy = None):
         self.customer_id = customer_id
         self.name = name
-        self._discount_percentage = discount_percentage
 
-    @property
-    def discount_percentage(self):
-        return self._discount_percentage 
+        if isinstance(discount_strategy, (int,float)):
+            self.discount_strategy = PercentageDiscount(discount_strategy)
+        else:
+            self.discount_strategy = discount_strategy or NoDiscount
+
+class VIPCustomer(Customer):
+    def __init__(self, customer_id: str, name: str):
+        super().__init__(customer_id, name, discount_strategy=PercentageDiscount(10.0))
+
+
+
 
 class OrderItem:
     def __init__(self, product: Product, quantity: int):
@@ -78,5 +129,4 @@ class Order:
 
     def calculate_grand_total(self) -> float:
         total = sum(item.get_total_price() for item in self.items)
-        discount = total * (self.customer.discount_percentage / 100)
-        return total - discount
+        return self.customer.discount_strategy.calculate(total)

@@ -1,14 +1,13 @@
 from exceptions import InsufficientStockError
-from models import PhysicalProduct, Order
+from models import PhysicalProduct, Order, DiscountStrategy
 
-class OrderService:
-    def process_order(self, order: Order) -> float:
+class OrderService():
+    def process_order(self, order) -> float:
+
+        final_price = order.calculate_grand_total()
+
         for item in order.items:
-            if isinstance(item.product, PhysicalProduct):
-                if item.quantity > item.product._stock_quantity:
-                    raise InsufficientStockError(
-                        f"Not enough stock aviable for the physical product"
-                    )
-                item.product.reduce_stock(item.quantity)
+            product = item.product
+            product.reduce_stock(item.quantity)
 
-        return order.calculate_grand_total()
+        return final_price
