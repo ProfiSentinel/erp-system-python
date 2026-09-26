@@ -100,7 +100,7 @@ class Customer:
         if isinstance(discount_strategy, (int,float)):
             self.discount_strategy = PercentageDiscount(discount_strategy)
         else:
-            self.discount_strategy = discount_strategy or NoDiscount
+            self.discount_strategy = discount_strategy or NoDiscount()
 
 class VIPCustomer(Customer):
     def __init__(self, customer_id: str, name: str):
