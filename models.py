@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from exceptions import InsufficientStockError
 
-#_____SLEVY_________
+# _____ SLEVY _____
 
 class DiscountStrategy(ABC):
     """Abstraktní předek pro všechny typy slev"""
@@ -10,49 +10,52 @@ class DiscountStrategy(ABC):
     def calculate(self, total_price: float) -> float:
         pass
 
+
 class NoDiscount(DiscountStrategy):
     """Žádná sleva"""
 
     def calculate(self, total_price: float) -> float:
         return total_price
 
+
 class PercentageDiscount(DiscountStrategy):
-    """Procentuáln sleva"""
+    """Procentuální sleva"""
 
     def __init__(self, percentage: float):
         self.percentage = percentage
 
     def calculate(self, total_price: float) -> float:
-        discount_ammount = total_price * (self.percentage/100)
-        return max(0.0, total_price - discount_ammount)
+        discount_amount = total_price * (self.percentage / 100)
+        return max(0.0, total_price - discount_amount)
+
 
 class FixedDiscount(DiscountStrategy):
-    """Fixkní částka slevová"""
-    def __init__(self, ammount: float):
-        self.ammount = ammount
+    """Fixní částka slevová"""
+
+    def __init__(self, amount: float):
+        self.amount = amount
 
     def calculate(self, total_price: float) -> float:
-        return max(0.0, total_price - self.ammount) 
+        return max(0.0, total_price - self.amount)
 
 
-
-
-#______PRODUKTY_______    
+# _____ PRODUKTY _____
 
 class Product(ABC):
     """Předek pro produkty"""
-    def __init__(self, name:str, base_price:float):
+
+    def __init__(self, name: str, base_price: float):
         self.name = name
         self._base_price = base_price
 
     @property
-    def base_price(self):
+    def base_price(self) -> float:
         return self._base_price
 
     @base_price.setter
-    def base_price(self, value):
+    def base_price(self, value: float):
         if value < 0:
-            raise ValueError("Base price cannot be neegative.")
+            raise ValueError("Base price cannot be negative.")
         self._base_price = value
 
     @abstractmethod
@@ -61,12 +64,16 @@ class Product(ABC):
 
 
 class PhysicalProduct(Product):
-    def __init__(self, name:str, base_price:float, stock_quantity:int, weight_kg:float, vat_rate: float = 0.21):
+    def __init__(self, name: str, base_price: float, stock_quantity: int, weight_kg: float, vat_rate: float = 0.21):
         super().__init__(name, base_price)
         self._stock_quantity = stock_quantity
         self.weight_kg = weight_kg
         self.vat_rate = vat_rate
 
+    @property
+    def stock_quantity(self) -> int:
+        """Getter pro získání aktuálního stavu skladu"""
+        return self._stock_quantity
 
     def calculate_price(self) -> float:
         return self.base_price * (1 + self.vat_rate)
@@ -78,35 +85,36 @@ class PhysicalProduct(Product):
 
 
 class ServiceItem(Product):
-    def __init__(self, name:str, base_price:float, duration_hours:float, vat_rate: float = 0.21):
+    def __init__(self, name: str, base_price: float, duration_hours: float, vat_rate: float = 0.21):
         super().__init__(name, base_price)
         self.duration_hours = duration_hours
         self.vat_rate = vat_rate
-        
 
     def calculate_price(self) -> float:
         return self.base_price * self.duration_hours * (1 + self.vat_rate)
 
 
-
-#________ZÁZKAZNÍCI___________
-
+# _____ ZÁKAZNÍCI A OBJEDNÁVKY _____
 
 class Customer:
     def __init__(self, customer_id: str, name: str, discount_strategy: DiscountStrategy = None):
         self.customer_id = customer_id
         self.name = name
 
-        if isinstance(discount_strategy, (int,float)):
-            self.discount_strategy = PercentageDiscount(discount_strategy)
+        if isinstance(discount_strategy, (int, float)):
+            self.discount_strategy = PercentageDiscount(float(discount_strategy))
         else:
+<<<<<<< HEAD
             self.discount_strategy = discount_strategy or NoDiscount()
+=======
+            # Oprava: Vytváříme instanci NoDiscount(), nikoli třídu
+            self.discount_strategy = discount_strategy or NoDiscount()
+
+>>>>>>> b553233 (Refactor: Add gitignore, update README and fix order service logic)
 
 class VIPCustomer(Customer):
     def __init__(self, customer_id: str, name: str):
         super().__init__(customer_id, name, discount_strategy=PercentageDiscount(10.0))
-
-
 
 
 class OrderItem:
