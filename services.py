@@ -1,7 +1,7 @@
 from exceptions import InsufficientStockError
 from models import PhysicalProduct, Order, DiscountStrategy
 
-class OrderService():
+class OrderService:
     def process_order(self, order) -> float:
 
         final_price = order.calculate_grand_total()
